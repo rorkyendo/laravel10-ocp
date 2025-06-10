@@ -10,8 +10,8 @@ metadata:
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
-  namespace: poc-ocp # hapus jika default
-  name: laravel-build # Ganti build name nya (1,2,3,dstnya)
+  name: laravel-build
+  namespace: poc-ocp
 spec:
   source:
     type: Git
@@ -36,7 +36,7 @@ metadata:
   labels:
     app: laravel
 spec:
-  replicas: 3 # jumlah pod yang di replica dapat di scaling
+  replicas: 3
   selector:
     matchLabels:
       app: laravel
@@ -49,13 +49,13 @@ spec:
         - name: laravel
           image: image-registry.openshift-image-registry.svc:5000/poc-ocp/laravel:latest
           ports:
-            - containerPort: 9000 # php-fpm default
+            - containerPort: 9000
           volumeMounts:
-            - name: storage
-              mountPath: /var/www/html/storage
+            - name: laravel-html
+              mountPath: /var/www/html
       volumes:
-        - name: storage
-          emptyDir: {} # atau PersistentVolumeClaim jika diperlukan
+        - name: laravel-html
+          emptyDir: {}  # Shared with nginx
 
 =============== SERVICES ==================
 apiVersion: v1
@@ -76,6 +76,20 @@ kind: ConfigMap
 metadata:
   name: nginx-conf
 data:
+  nginx.conf: |
+    worker_processes auto;
+    pid /tmp/nginx.pid;  # fix untuk non-root
+    events {
+        worker_connections 1024;
+    }
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+        sendfile        on;
+        keepalive_timeout  65;
+        include /etc/nginx/conf.d/*.conf;
+    }
+
   default.conf: |
     server {
         listen 8080;
@@ -97,13 +111,12 @@ data:
 
 =============== NGINX DEPLOYMENT ==================
 
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
 spec:
-  replicas: 1 # dapat di scaling jumlah deployment
+  replicas: 1
   selector:
     matchLabels:
       app: nginx
@@ -112,6 +125,13 @@ spec:
       labels:
         app: nginx
     spec:
+      initContainers:
+        - name: init-copy-laravel
+          image: image-registry.openshift-image-registry.svc:5000/poc-ocp/laravel:latest
+          command: ["sh", "-c", "cp -R /var/www/html/* /tmp/laravel-html"]
+          volumeMounts:
+            - name: laravel-html
+              mountPath: /tmp/laravel-html
       containers:
         - name: nginx
           image: nginx:latest
@@ -119,22 +139,23 @@ spec:
             - containerPort: 8080
           volumeMounts:
             - name: nginx-conf
-              mountPath: /etc/nginx/conf.d
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
             - name: laravel-html
               mountPath: /var/www/html
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
       volumes:
         - name: nginx-conf
           configMap:
             name: nginx-conf
         - name: laravel-html
-      volumeMounts:
-  	- name: nginx-cache
-          mountPath: /var/cache/nginx
-      volumes:
+          emptyDir: {}
         - name: nginx-cache
           emptyDir: {}
-            emptyDir: {} # Gunakan PVC jika perlu sinkronisasi storage
-
 
 =============== NGINX SERVICES ===================
 
