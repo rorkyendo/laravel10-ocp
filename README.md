@@ -36,7 +36,7 @@ metadata:
   labels:
     app: laravel
 spec:
-  replicas: 3
+  replicas: 3 # jumlah pod yang di replica dapat di scaling
   selector:
     matchLabels:
       app: laravel
@@ -103,7 +103,7 @@ kind: Deployment
 metadata:
   name: nginx
 spec:
-  replicas: 1
+  replicas: 1 # dapat di scaling jumlah deployment
   selector:
     matchLabels:
       app: nginx
