@@ -13,15 +13,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel app source
+# Setelah copy source code
 COPY . .
 
-# Ensure necessary permissions
+# Set permission
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
-# Run Composer and Laravel optimizations
-RUN composer install --no-dev --optimize-autoloader \
+# Copy default env & generate APP_KEY sebelum cache config
+RUN cp .env.example .env \
+    && composer install --no-dev --optimize-autoloader \
+    && php artisan key:generate \
     && php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache \
