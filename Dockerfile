@@ -18,7 +18,10 @@ COPY . .
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache
+
+# RUN chown -R www-data:www-data storage bootstrap/cache && \
+#     chmod -R ug+rwX storage bootstrap/cache
 
 # Setup Laravel
 RUN cp .env.example .env \
