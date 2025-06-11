@@ -57,21 +57,13 @@ spec:
       labels:
         app: laravel
     spec:
-      securityContext:
-        fsGroup: 33  # www-data group, to allow Laravel write permission
       containers:
         - name: laravel
           image: image-registry.openshift-image-registry.svc:5000/poc-ocp/laravel:latest
-          command: ["php-fpm"]
           ports:
             - containerPort: 9000
-          volumeMounts:
-            - name: laravel-storage
-              mountPath: /var/www/html
-      volumes:
-        - name: laravel-storage
-          persistentVolumeClaim:
-            claimName: laravel-pvc
+          command:
+            - php-fpm
 
 =============== SERVICES ==================
 apiVersion: v1
