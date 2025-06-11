@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: laravel_app_php
+    build: .
+    ports:
+      - "9000:9000"
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    user: "www-data"
+    networks:
+      - laravel_net
+    depends_on:
+      - mysql
+
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: laravel_db
+  #   environment:
+  #     MYSQL_DATABASE: laravel
+  #     MYSQL_USER: laravel
+  #     MYSQL_PASSWORD: secret
+  #     MYSQL_ROOT_PASSWORD: root
+  #   volumes:
+  #     - db_data:/var/lib/mysql
+  #   networks:
+  #     - laravel_net
+
+volumes:
+  db_data:
+
+networks:
+  laravel_net:
+    driver: bridge
