@@ -1,5 +1,9 @@
 ## STEP BY STEP Configurasi OCP 
 ![image](https://github.com/user-attachments/assets/e283823b-ced3-4aba-bad0-69972523464a)
+
+OCP Playgorund by RedHat OpenShift
+https://www.redhat.com/en/interactive-labs/red-hat-openshift-4.17-playground
+
 <ul>
 <li>Membuat Project dengan nama poc-ocp</li>
 <li>Membuat ImageStream</li>
