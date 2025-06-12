@@ -1,12 +1,18 @@
-================ ImageStream Config ==================
-apiVersion: image.openshift.io/v1
-kind: ImageStream
-metadata:
-  name: laravel
-  namespace: poc-ocp
+## STEP BY STEP Configurasi OCP 
+![image](https://github.com/user-attachments/assets/e283823b-ced3-4aba-bad0-69972523464a)
+<ul>
+<li>Membuat Project dengan nama poc-ocp</li>
+<li>Membuat ImageStream</li>
+<pre>
+    apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      name: laravel
+      namespace: poc-ocp    
+</pre>
 
-================ BUILDS CONFIG ====================
-
+<li>Membuat Build Config</li>
+<pre>
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
@@ -26,8 +32,10 @@ spec:
     to:
       kind: ImageStreamTag
       name: laravel:latest
-
-=============== BUAT PERSISTENT VOLUME (PVC) ==================
+</pre>
+<li>Lakukan build image dari BuildConfig yang sudah dibuat sebelumnya</li>
+<li>Buat Persitent Volume Claim</li>
+<pre>
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -39,16 +47,16 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
-=============== DEPLOYMENT ==================
-
+</pre>
+<li>Lakukan Deployment PHP-FPM dari Build Image Laravel</li>
+<pre>
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: laravel-app
   namespace: poc-ocp
 spec:
-  replicas: 3
+  replicas: 3 #bisa scalable
   selector:
     matchLabels:
       app: laravel
@@ -64,8 +72,9 @@ spec:
             - containerPort: 9000
           command:
             - php-fpm
-
-=============== SERVICES ==================
+</pre>
+<li>Buat service laravel (php-fpm) pada port 9000</li>
+<pre>
 apiVersion: v1
 kind: Service
 metadata:
@@ -78,8 +87,9 @@ spec:
     - protocol: TCP
       port: 9000
       targetPort: 9000
-
-=============== NGINX ConfigMap ================
+</pre>
+<li>Buat ConfigMap NGINX</li>
+<pre>
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -119,9 +129,9 @@ data:
             fastcgi_param PATH_INFO $fastcgi_path_info;
         }
     }
-
-=============== NGINX DEPLOYMENT ==================
-
+</pre>
+<li>Lakukan Deployment NGINX</li>
+<pre>
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -174,9 +184,9 @@ spec:
             claimName: laravel-pvc
         - name: cache
           emptyDir: {}
-
-=============== NGINX SERVICES ===================
-
+</pre>
+<li>Buat NGINX Service</li>
+<pre>
 apiVersion: v1
 kind: Service
 metadata:
@@ -189,11 +199,10 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8080
-  type: NodePort
-
-
-=========== Routes ==============
-
+  type: NodePort #NodePort untuk diakses secara publik
+</pre>
+<li>Buat routes untuk dapat diakses dari internet</li>
+<pre>
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -207,3 +216,5 @@ spec:
     targetPort: 8080
   tls:
     termination: edge
+</pre>
+</ul>
